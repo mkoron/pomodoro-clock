@@ -8,59 +8,67 @@ class App extends Component {
     this.state = {
       break: 5,
       session: 25,
-      lastTimestamp: 25
+      timeRemaining: 25
     }
 
-    this.incrementSession = this.incrementSession.bind(this);
-    this.decrementSession = this.decrementSession.bind(this);
-    this.incrementBreak = this.incrementBreak.bind(this);
-    this.decrementBreak = this.decrementBreak.bind(this);
     this.reset = this.reset.bind(this);
     this.start = this.start.bind(this);
   }
 
-  incrementSession() {
-    if (!this.valueInRange(this.state.session + 1)) return;
-
-    this.setState( (prevState) => {
-      return {
-        session: prevState.session + 1
-      }
-    });
+  componentDidMount() {
+    this.updateTimeRemaining();
   }
 
-  decrementSession() {
-    if (!this.valueInRange(this.state.session - 1)) return;
-
-    this.setState( (prevState) => {
-      return {
-        session: prevState.session - 1
-      }
-    });
+  updatePomodoro(activity, set) {
+    console.log('begore', this.state.break);
+    if (!this.valueInRange(this.state[activity], set)) return;
+    console.log('after', this.state.break);
+    const val = activity + set;
+    
+    switch(val) {
+      case 'sessionup':
+        this.setState( (prevState) => {
+          return {
+            session: prevState.session + 1
+          };
+        });
+        break;
+      case 'sessiondown':
+        this.setState( (prevState) => {
+          return {
+            session: prevState.session - 1
+          }
+        });
+        break;
+      case 'breakup':
+        this.setState( (prevState) => {
+          return {
+            break: prevState.break + 1
+          };
+        });
+        break;
+      case 'breakdown':
+        this.setState( (prevState) => {
+          return {
+            break: prevState.break - 1
+          }
+        });
+        break;
+      default:
+        return;  
+    }
   }
 
-  incrementBreak() {
-    if (!this.valueInRange(this.state.break + 1)) return;
-
-    this.setState( (prevState) => {
-      return {
-        break: prevState.break + 1
-      }
-    });
-  }
-
-  decrementBreak() {
-    if (!this.valueInRange(this.state.break - 1)) return;
-
-    this.setState( (prevState) => {
-      return {
-        break: prevState.break - 1
-      }
-    });
-  }
-
-  valueInRange(value) {
-    return value >= 1 && value <= 60 ? true : false; 
+  valueInRange(value, set) {
+    if (set === 'up') {
+      value++;
+    } 
+    else if (set === 'down')
+    {
+      value--
+    } else return;
+    
+    return value > 0 && value <= 60 ? true : false; 
   }
 
   reset() {
@@ -71,15 +79,15 @@ class App extends Component {
   }
 
   start() {
-    setInterval(this.updateTimeRemaining, 1000);
+    setInterval(this.updateTimeRemaining, 500);
   }
 
   updateTimeRemaining() {
     const millisNow = new Date().getTime();
-    const elapsedMillis = millisNow - this.state.lastTimestamp;
-    //const updatedTimeRemaining = this.state.timeRemaining - elapsedMillis;
+    const elapsedMillis = millisNow// - this.state.lastTimestamp;
+    const updatedTimeRemaining = this.state.timeRemaining - elapsedMillis;
    
-    this.setState({ lastTimestamp: millisNow });
+    this.setState({ lastTimestamp: updatedTimeRemaining });
   }
 
   render() {
@@ -87,10 +95,10 @@ class App extends Component {
       <div className="App">
         <div className="title">Pomodoro Clock</div>
         <Timer start={ this.start } reset={ this.reset } lastTimestamp={ this.state.lastTimestamp } />
-        <Session time={ this.state.session } incrementSession={ this.incrementSession } 
-          decrementSession={ this.decrementSession } />
-        <Break time={ this.state.break } incrementBreak={ this.incrementBreak } 
-        decrementBreak={ this.decrementBreak }/>
+        <Session time={ this.state.session } incrementSession={ () => this.updatePomodoro('session', 'up') } 
+          decrementSession={ () => this.updatePomodoro('session', 'down') } />
+        <Break time={ this.state.break } incrementBreak={ () => this.updatePomodoro('break', 'up') } 
+        decrementBreak={ () => this.updatePomodoro('break', 'down') }/>
       </div>
     );
   }
